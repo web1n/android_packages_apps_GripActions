@@ -5,6 +5,7 @@ import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import org.lineageos.gripactions.ScreenStateMonitor
 import org.lineageos.gripactions.sensor.GripSensor
 
 class GripNotificationService : NotificationListenerService() {
@@ -14,7 +15,15 @@ class GripNotificationService : NotificationListenerService() {
     }
 
     private val grip by lazy { GripSensor(this) }
+    private val screen by lazy { ScreenStateMonitor(this) }
+    private var connected = false
+    private var listening = false
+
+    private val screenListener = ScreenStateMonitor.Listener { updateGripListening() }
+
     private val gripListener = GripSensor.Listener { state ->
+        if (!listening) return@Listener
+
         if (DEBUG) Log.d(TAG, "Grip changed: $state")
     }
 
@@ -22,12 +31,17 @@ class GripNotificationService : NotificationListenerService() {
         super.onListenerConnected()
 
         if (DEBUG) Log.d(TAG, "Notification listener connected")
-        grip.addListener(gripListener)
+        if (!connected) {
+            connected = true
+            screen.addListener(screenListener)
+        }
+
+        updateGripListening()
         activeNotifications?.forEach { onNotificationPosted(it) }
     }
 
     override fun onListenerDisconnected() {
-        grip.removeListener(gripListener)
+        stopListening()
 
         if (DEBUG) Log.d(TAG, "Notification listener disconnected")
 
@@ -52,7 +66,29 @@ class GripNotificationService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
-        grip.removeListener(gripListener)
+        stopListening()
         super.onDestroy()
     }
+
+    private fun updateGripListening() {
+        val shouldListen = connected && screen.isReady()
+        if (listening == shouldListen) return
+        listening = shouldListen
+
+        if (listening) {
+            grip.addListener(gripListener)
+        } else {
+            grip.removeListener(gripListener)
+        }
+    }
+
+    private fun stopListening() {
+        if (connected) {
+            connected = false
+            screen.removeListener(screenListener)
+        }
+
+        updateGripListening()
+    }
+
 }
