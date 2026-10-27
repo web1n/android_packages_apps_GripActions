@@ -25,6 +25,8 @@ internal class GripSensor(context: Context) : SensorEventListener {
         UNKNOWN(Int.MIN_VALUE),
     }
 
+    enum class Side { LEFT, RIGHT }
+
     companion object {
         private const val TAG = "GripSensor"
         private const val DEBUG = true
