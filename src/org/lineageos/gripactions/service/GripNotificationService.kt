@@ -3,9 +3,11 @@ package org.lineageos.gripactions.service
 
 import android.app.Notification
 import android.content.res.Configuration
+import android.hardware.display.DisplayManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import android.view.Display
 import org.lineageos.gripactions.ScreenStateMonitor
 import org.lineageos.gripactions.sensor.GripSensor
 import org.lineageos.gripactions.sensor.GripSensor.Side
@@ -22,7 +24,10 @@ class GripNotificationService : NotificationListenerService() {
     private val screen by lazy { ScreenStateMonitor(this) }
     private val overlay by lazy { CallActionsOverlay(this) }
     private val calls = linkedMapOf<String, StatusBarNotification>()
-    private var gripSide: Side? = null
+    private val defaultDisplay by lazy {
+        getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)
+    }
+    private var gripState = State.UNKNOWN
     private var side: Side? = null
     private var connected = false
     private var listening = false
@@ -32,12 +37,8 @@ class GripNotificationService : NotificationListenerService() {
     private val gripListener = GripSensor.Listener { state ->
         if (!listening) return@Listener
 
-        gripSide = when (state) {
-            State.BOTTOM_LEFT, State.TOP_LEFT -> Side.LEFT
-            State.BOTTOM_RIGHT, State.TOP_RIGHT -> Side.RIGHT
-            else -> null
-        }
-        side = gripSide ?: return@Listener
+        gripState = state
+        side = resolveGripSide() ?: return@Listener
 
         updateOverlay()
     }
@@ -68,7 +69,7 @@ class GripNotificationService : NotificationListenerService() {
         val notification = sbn.notification
         if (DEBUG && notification.category == Notification.CATEGORY_CALL) logCall(sbn)
         if (isIncomingCall(notification)) {
-            if (calls.isEmpty()) side = gripSide
+            if (calls.isEmpty()) side = resolveGripSide()
             calls[sbn.key] = sbn
         } else if (calls.remove(sbn.key) == null) {
             return
@@ -89,6 +90,7 @@ class GripNotificationService : NotificationListenerService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        resolveGripSide()?.let { side = it }
         overlay.dismiss()
         updateOverlay()
     }
@@ -96,6 +98,15 @@ class GripNotificationService : NotificationListenerService() {
     override fun onDestroy() {
         stopListening()
         super.onDestroy()
+    }
+
+    private fun resolveGripSide(): Side? {
+        val rotation = defaultDisplay.rotation
+        val result = gripState.resolveSide(rotation)
+        if (DEBUG && result != null) {
+            Log.d(TAG, "Grip mapping: state=$gripState rotation=$rotation side=$result")
+        }
+        return result
     }
 
     private fun isIncomingCall(notification: Notification): Boolean {
@@ -140,7 +151,7 @@ class GripNotificationService : NotificationListenerService() {
             grip.addListener(gripListener)
         } else {
             grip.removeListener(gripListener)
-            gripSide = null
+            gripState = State.UNKNOWN
             side = null
             overlay.dismiss()
         }

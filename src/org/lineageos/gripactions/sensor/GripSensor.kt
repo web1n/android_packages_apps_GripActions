@@ -2,11 +2,13 @@
 package org.lineageos.gripactions.sensor
 
 import android.content.Context
+import android.graphics.Point
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import android.util.RotationUtils
 
 internal class GripSensor(context: Context) : SensorEventListener {
     fun interface Listener {
@@ -22,7 +24,19 @@ internal class GripSensor(context: Context) : SensorEventListener {
         BOTH_HANDS(4),
         TOP_RIGHT(5),
         TOP_LEFT(6),
-        UNKNOWN(Int.MIN_VALUE),
+        UNKNOWN(Int.MIN_VALUE);
+
+        fun resolveSide(rotation: Int): Side? {
+            val point = when (this) {
+                BOTTOM_LEFT -> Point(0, 1)
+                BOTTOM_RIGHT -> Point(1, 1)
+                TOP_LEFT -> Point(0, 0)
+                TOP_RIGHT -> Point(1, 0)
+                else -> return null
+            }
+            RotationUtils.rotatePoint(point, rotation, 1, 1)
+            return if (point.x == 0) Side.LEFT else Side.RIGHT
+        }
     }
 
     enum class Side { LEFT, RIGHT }
