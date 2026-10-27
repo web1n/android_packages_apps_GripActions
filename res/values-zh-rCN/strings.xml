@@ -2,4 +2,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 <resources>
     <string name="app_name">适人握持</string>
+    <string name="settings_summary">根据握持姿态调整来电操作按钮位置</string>
+    <string name="enable_title">使用适人握持</string>
+    <string name="feature_description">开启后，来电时会根据握持姿态在屏幕左侧或右侧显示操作按钮</string>
 </resources>
