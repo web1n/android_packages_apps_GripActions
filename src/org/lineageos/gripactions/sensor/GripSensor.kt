@@ -26,6 +26,11 @@ internal class GripSensor(context: Context) : SensorEventListener {
         TOP_LEFT(6),
         UNKNOWN(Int.MIN_VALUE);
 
+        fun isSingleHanded(): Boolean = when (this) {
+            BOTTOM_LEFT, BOTTOM_RIGHT, TOP_LEFT, TOP_RIGHT -> true
+            else -> false
+        }
+
         fun resolveSide(rotation: Int): Side? {
             val point = when (this) {
                 BOTTOM_LEFT -> Point(0, 1)

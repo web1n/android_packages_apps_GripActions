@@ -28,17 +28,17 @@ class GripNotificationService : NotificationListenerService() {
         getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)
     }
     private var gripState = State.UNKNOWN
-    private var side: Side? = null
+    private var side = Side.RIGHT
     private var connected = false
     private var listening = false
 
     private val screenListener = ScreenStateMonitor.Listener { updateGripListening() }
 
     private val gripListener = GripSensor.Listener { state ->
-        if (!listening) return@Listener
+        if (!listening || !state.isSingleHanded()) return@Listener
 
         gripState = state
-        side = resolveGripSide() ?: return@Listener
+        side = resolveGripSide()
 
         updateOverlay()
     }
@@ -69,7 +69,6 @@ class GripNotificationService : NotificationListenerService() {
         val notification = sbn.notification
         if (DEBUG && notification.category == Notification.CATEGORY_CALL) logCall(sbn)
         if (isIncomingCall(notification)) {
-            if (calls.isEmpty()) side = resolveGripSide()
             calls[sbn.key] = sbn
         } else if (calls.remove(sbn.key) == null) {
             return
@@ -90,7 +89,7 @@ class GripNotificationService : NotificationListenerService() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        resolveGripSide()?.let { side = it }
+        side = resolveGripSide()
         overlay.dismiss()
         updateOverlay()
     }
@@ -100,10 +99,10 @@ class GripNotificationService : NotificationListenerService() {
         super.onDestroy()
     }
 
-    private fun resolveGripSide(): Side? {
+    private fun resolveGripSide(): Side {
         val rotation = defaultDisplay.rotation
-        val result = gripState.resolveSide(rotation)
-        if (DEBUG && result != null) {
+        val result = gripState.resolveSide(rotation) ?: Side.RIGHT
+        if (DEBUG) {
             Log.d(TAG, "Grip mapping: state=$gripState rotation=$rotation side=$result")
         }
         return result
@@ -132,10 +131,9 @@ class GripNotificationService : NotificationListenerService() {
     }
 
     private fun updateOverlay() {
-        val side = side
         val notification = calls.values.lastOrNull()
 
-        if (listening && side != null && notification != null) {
+        if (listening && notification != null) {
             overlay.show(notification, side)
         } else {
             overlay.dismiss()
@@ -152,7 +150,7 @@ class GripNotificationService : NotificationListenerService() {
         } else {
             grip.removeListener(gripListener)
             gripState = State.UNKNOWN
-            side = null
+            side = Side.RIGHT
             overlay.dismiss()
         }
     }
