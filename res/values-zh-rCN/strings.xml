@@ -5,4 +5,11 @@
     <string name="settings_summary">根据握持姿态调整来电操作按钮位置</string>
     <string name="enable_title">使用适人握持</string>
     <string name="feature_description">开启后，来电时会根据握持姿态在屏幕左侧或右侧显示操作按钮</string>
+    <string name="test_call_title">发送测试来电通知</string>
+    <string name="test_call_summary">模拟来电通知，60 秒后自动移除</string>
+    <string name="test_call_channel">测试来电</string>
+    <string name="test_call_answered">已接听测试来电</string>
+    <string name="test_call_declined">已拒绝测试来电</string>
+    <string name="test_call_notifications_disabled">请先在通知设置中允许适人握持发送通知，并开启“测试来电”通知类别</string>
+    <string name="test_call_failed">无法发送测试来电通知，请检查通知权限</string>
 </resources>

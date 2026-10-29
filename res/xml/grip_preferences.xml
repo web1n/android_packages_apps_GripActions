@@ -6,6 +6,12 @@
         android:key="grip_enabled"
         android:title="@string/enable_title"
         android:persistent="false" />
+    <Preference
+        android:key="test_call"
+        android:dependency="grip_enabled"
+        android:title="@string/test_call_title"
+        android:summary="@string/test_call_summary"
+        android:persistent="false" />
     <com.android.settingslib.widget.FooterPreference
         android:title="@string/feature_description"
         android:selectable="false" />

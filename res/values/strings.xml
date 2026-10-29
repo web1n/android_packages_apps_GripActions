@@ -5,4 +5,11 @@
     <string name="settings_summary">Position call controls based on how you hold your device</string>
     <string name="enable_title">Use Grip Actions</string>
     <string name="feature_description">When enabled, incoming call controls appear on the left or right side of the screen based on how you hold your device</string>
+    <string name="test_call_title">Send test call notification</string>
+    <string name="test_call_summary">Show a simulated incoming call for 60 seconds</string>
+    <string name="test_call_channel">Test calls</string>
+    <string name="test_call_answered">Test call answered</string>
+    <string name="test_call_declined">Test call declined</string>
+    <string name="test_call_notifications_disabled">Enable Grip Actions notifications and the Test calls channel in notification settings first</string>
+    <string name="test_call_failed">Unable to send test call notification, check notification permissions</string>
 </resources>
